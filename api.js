@@ -1,6 +1,6 @@
 const axios = require("axios");
 require("dotenv").config();
-const { API_BASE_URL } = require("./config");
+const {API_BASE_URL, SENSOR_UNITS} = require("./config");
 
 /** 🚀 Fetch all registered devices */
 async function getDevices() {
@@ -38,7 +38,7 @@ async function getDeviceSensorMappings() {
 /** 🚀 Register a device */
 async function registerDevice(name, type) {
     try {
-        const response = await axios.post(`${API_BASE_URL}/devices`, { name, type });
+        const response = await axios.post(`${API_BASE_URL}/devices`, {name, type});
         return response.data;
     } catch (error) {
         console.error(`❌ Failed to register device (${name}):`, error.response?.data || error.message);
@@ -48,8 +48,10 @@ async function registerDevice(name, type) {
 
 /** 🚀 Register a sensor */
 async function registerSensor(type) {
+    const unit = SENSOR_UNITS[type] || "unknown"; // Use config for units
+
     try {
-        const response = await axios.post(`${API_BASE_URL}/sensors`, { type, unit: "unknown" });
+        const response = await axios.post(`${API_BASE_URL}/sensors`, {type, unit});
         return response.data;
     } catch (error) {
         console.error(`⚠️ Sensor '${type}' might already exist.`);
@@ -60,7 +62,7 @@ async function registerSensor(type) {
 /** 🚀 Map a sensor to a device */
 async function mapSensorToDevice(deviceId, sensorId) {
     try {
-        await axios.post(`${API_BASE_URL}/device-sensors`, { device_id: deviceId, sensor_id: sensorId });
+        await axios.post(`${API_BASE_URL}/device-sensors`, {device_id: deviceId, sensor_id: sensorId});
     } catch (error) {
         console.error(`❌ Failed to map sensor ${sensorId} to device ${deviceId}:`, error.response?.data || error.message);
     }
@@ -68,13 +70,12 @@ async function mapSensorToDevice(deviceId, sensorId) {
 
 async function sendSensorReading(deviceSensorId, time, value) {
     try {
-        // Increase precision to microseconds by adding a fractional offset
         const microseconds = Math.floor(Math.random() * 1000);
-        const adjustedTime = new Date(time.getTime() + microseconds / 1000); // Add fractional milliseconds
+        const adjustedTime = new Date(time.getTime() + microseconds / 1000);
 
         await axios.post(`${API_BASE_URL}/sensor-readings`, {
             device_sensor_id: deviceSensorId,
-            time: adjustedTime.toISOString(), // Send in ISO format
+            time: adjustedTime.toISOString(),
             value
         });
 

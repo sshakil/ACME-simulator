@@ -18,5 +18,37 @@ module.exports = {
             "Forward Collision Radar", "Rear Collision Radar", "Blind Spot Detection",
             "Lane Departure Warning", "AEB Radar", "GPS"
         ]
+    },
+
+    SENSOR_UNITS: {
+        "AEB Radar": "m",
+        "Air Data (Pitot Tube)": "Pa",
+        "Blind Spot Detection": "boolean",
+        "Blood Pressure": "mmHg",
+        "Camera": "pixels",
+        "Cargo Humidity": "%",
+        "Cargo Temperature": "°C",
+        "Cargo Weight": "kg",
+        "Door Sensor": "boolean",
+        "ECG": "mV",
+        "Engine Temperature": "°C",
+        "Fuel Level": "L",
+        "Gas Detection": "ppm",
+        "GPS": "degrees",
+        "Gyroscope": "°/s",
+        "IMU": "m/s²",
+        "Lane Departure Warning": "cm",
+        "LiDAR": "m",
+        "Oil Pressure": "psi",
+        "Proximity": "cm",
+        "Radar": "m",
+        "Rear Collision Radar": "m",
+        "RFID": "tag_id",
+        "SpO2": "%",
+        "Speed": "km/h",
+        "Tire Pressure": "psi",
+        "Vibration": "g",
+        "Wheel Speed": "rpm",
+        "X-ray Detectors": "grayscale"
     }
 };
