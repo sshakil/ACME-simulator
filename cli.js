@@ -142,7 +142,6 @@ const simulateSensorReadings = async (fetchMappingsFn, identifier) => {
         for (const { id, sensor_id } of mappings) {
             const value = generateSensorReading(sensor_id)
             await sendSensorReading(id, new Date(), value)
-            console.log(`📊 Sent reading: Device-Sensor ${id} => Value: ${value}`)
         }
     }
 

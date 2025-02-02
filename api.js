@@ -47,10 +47,10 @@ async function getDeviceSensorMappingsForDevices(deviceIds) {
 }
 
 /** 🚀 Fetch device-sensor mappings for specific sensors */
-async function getDeviceSensorMappingsForSensors(sensorIds) {
+async function getDeviceSensorMappingsForSensors(deviceSensorIds) {
     try {
-        const mappings = await getDeviceSensorMappings();
-        return mappings.filter(m => sensorIds.includes(m.sensor_id));
+        const deviceSensors = await getDeviceSensorMappings();
+        return deviceSensors.filter(deviceSensor => deviceSensorIds.includes(deviceSensor.id));
     } catch (error) {
         console.error("❌ Failed to fetch mappings for specific sensors:", error.response?.data || error.message);
         return [];
