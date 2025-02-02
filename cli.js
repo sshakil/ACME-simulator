@@ -1,13 +1,26 @@
-const { Command } = require("commander")
+const {Command} = require("commander")
 const {
     registerDevice, registerSensor, mapSensorToDevice, sendSensorReading,
     getDeviceSensorMappings, getDevices, getSensors,
     getDeviceSensorMappingsForDevices, getDeviceSensorMappingsForSensors
 } = require("./api")
-const { DEVICE_TYPES, addDeviceType, addSensorType, SIMULATION_INTERVAL_MS } = require("./config")
-const { generateSensorReading } = require("./generator")
+const {DEVICE_TYPES, addDeviceType, addSensorType, SIMULATION_INTERVAL_MS} = require("./config")
+const {generateSensorReading} = require("./generator")
 
 const program = new Command()
+
+let cachedMappings = null // Cache for device-sensor mappings
+
+// 🔧 Utility: Fetch and cache device-sensor mappings
+const fetchDeviceSensorMappings = async (forceRefresh = false) => {
+    if (!cachedMappings || forceRefresh) {
+        console.log(forceRefresh ? "🔄 Fetching fresh device-sensor mappings..." : "📡 Caching device-sensor mappings...")
+        cachedMappings = await getDeviceSensorMappings()
+    } else {
+        console.log("📡 Using cached device-sensor mappings.")
+    }
+    return cachedMappings
+}
 
 // 🔧 Utility: Register sensors for a device
 const registerAndMapSensors = async (deviceId, type) => {
@@ -45,7 +58,6 @@ program
     .action(async (devices) => {
         console.log("🚀 Registering devices and sensors...")
 
-        // ✅ Kept your exact matcher for patient-monitor, warehouse-robot
         const deviceCounts = devices.match(/(?:[^\s,"]+|"[^"]*")+/g).reduce((acc, item) => {
             const [type, count] = item.split("=")
             if (type && count) acc[type.trim()] = parseInt(count, 10)
@@ -85,8 +97,6 @@ program
         const device = await registerDevice(name, type)
         if (device) {
             console.log(`✅ Registered: ${name} (ID: ${device.id})`)
-
-            // Ensure sensors are registered unless explicitly disabled
             if (!options.noSensors) await registerAndMapSensors(device.id, type)
         }
     })
@@ -101,45 +111,43 @@ program
         const device = (await getDevices()).find(d => d.name === deviceName)
         if (!device) return console.log(`❌ Device "${deviceName}" not found.`)
 
-        const deviceMappings = (await getDeviceSensorMappings()).filter(m => m.device_id === device.id)
+        const deviceMappings = (await fetchDeviceSensorMappings()).filter(m => m.device_id === device.id)
         if (!deviceMappings.length) return console.log(`ℹ️ No sensors mapped to "${deviceName}".`)
 
         const sensors = await getSensors()
 
         // Determine column widths dynamically for better alignment
-        const maxNameLength = Math.max(...deviceMappings.map(({ sensor_id }) => {
+        const maxNameLength = Math.max(...deviceMappings.map(({sensor_id}) => {
             const sensor = sensors.find(s => s.id === sensor_id)
             return sensor ? sensor.type.length : "Unknown Sensor".length
         }), 4) // Minimum width fallback
 
-        const maxIdLength = Math.max(...deviceMappings.map(({ id }) => String(id).length), 17) // "device_sensor_id".length
+        const maxIdLength = Math.max(...deviceMappings.map(({id}) => String(id).length), 17) // "device_sensor_id".length
 
-        // Print headers
         console.log(`✅ Sensors mapped to ${device.name}:\n`)
         console.log(`${"Name".padEnd(maxNameLength)} | ${"device_sensor_id".padEnd(maxIdLength)}`)
         console.log(`${"-".repeat(maxNameLength)} | ${"-".repeat(maxIdLength)}`)
 
-        // Print sensor mappings with aligned columns
-        deviceMappings.forEach(({ sensor_id, id }) => {
+        deviceMappings.forEach(({sensor_id, id}) => {
             const sensor = sensors.find(s => s.id === sensor_id)
             const sensorName = sensor ? sensor.type : "Unknown Sensor"
             console.log(`${sensorName.padEnd(maxNameLength)} | ${String(id).padEnd(maxIdLength)}`)
         })
     })
 
-// 🔧 Utility to Simulate Sensor Readings
-const simulateSensorReadings = async (fetchMappingsFn, identifier) => {
+// 🚀 Simulate sensor readings with optional cache
+const simulateSensorReadings = async (fetchMappingsFn, identifier, useCache = true) => {
     console.log(`📡 Starting simulation for ${identifier} every ${SIMULATION_INTERVAL_MS} ms...`)
 
     async function sendReadings() {
         console.log(`📡 Fetching device-sensor mappings for ${identifier}...`)
-        const mappings = await fetchMappingsFn()
+        const mappings = await fetchMappingsFn(!useCache)
         if (!mappings.length) {
             console.warn(`⚠️ No mappings found for ${identifier}.`)
             return
         }
 
-        for (const { id, sensor_id } of mappings) {
+        for (const {id, sensor_id} of mappings) {
             const value = generateSensorReading(sensor_id)
             await sendSensorReading(id, new Date(), value)
         }
@@ -149,30 +157,34 @@ const simulateSensorReadings = async (fetchMappingsFn, identifier) => {
     setInterval(sendReadings, SIMULATION_INTERVAL_MS)
 }
 
-// 🚀 Simulate readings (all devices, particular devices, particular sensors)
+// 🚀 Simulate readings (all devices, specified devices, specified sensors)
 program
     .command("simulate-readings-for-all-devices")
+    .option("--no-mapping-cache", "Fetch fresh device-sensor mappings before each reading")
     .description("Simulate readings for all devices")
-    .action(() => simulateSensorReadings(getDeviceSensorMappings, "all devices"))
+    .action((options) => simulateSensorReadings(fetchDeviceSensorMappings, "all devices", !options.noMappingCache))
 
 program
-    .command("simulate-readings-for-particular-devices <deviceIds>")
+    .command("simulate-readings-for-specified-devices <deviceIds>")
+    .option("--no-mapping-cache", "Fetch fresh device-sensor mappings before each reading")
     .description("Simulate readings for specific devices")
-    .action((deviceIds) =>
+    .action((deviceIds, options) =>
         simulateSensorReadings(
             () => getDeviceSensorMappingsForDevices(deviceIds.split(",").map(Number)),
-            "specific devices"
+            "specific devices",
+            !options.noMappingCache
         )
     )
 
-// 🚀 Simulate readings for specific **device_sensor_ids**
 program
-    .command("simulate-readings-for-particular-sensors <deviceSensorIds>")
+    .command("simulate-readings-for-specified-sensors <deviceSensorIds>")
+    .option("--no-mapping-cache", "Fetch fresh device-sensor mappings before each reading")
     .description("Simulate readings for specific device_sensor_ids")
-    .action((deviceSensorIds) =>
+    .action((deviceSensorIds, options) =>
         simulateSensorReadings(
             () => getDeviceSensorMappingsForSensors(deviceSensorIds.split(",").map(Number)),
-            "specific device_sensor_ids"
+            "specific device_sensor_ids",
+            !options.noMappingCache
         )
     )
 

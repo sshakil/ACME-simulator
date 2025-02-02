@@ -51,4 +51,4 @@ module.exports = {
         "Wheel Speed": "rpm",
         "X-ray Detectors": "grayscale"
     }
-};
+}
