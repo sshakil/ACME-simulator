@@ -1,5 +1,5 @@
-const { faker } = require("@faker-js/faker");
-const turf = require("@turf/turf");
+const { faker } = require('@faker-js/faker');
+const turf = require('@turf/turf');
 
 // 📌 Road & Highway GPS Routes (Simplified, Expand as Needed)
 const cityRoutes = {
@@ -60,27 +60,60 @@ function generateGPS(city) {
     return { lat: point[1], lon: point[0] }; // Return formatted GPS
 }
 
+// 📌 Sensor Type to Unit Mapping
+const SENSOR_UNITS = {
+    "AEB Radar": "m",
+    "Air Data (Pitot Tube)": "Pa",
+    "Blind Spot Detection": "boolean",
+    "Blood Pressure": "mmHg",
+    "Camera": "pixels",
+    "Cargo Humidity": "%",
+    "Cargo Temperature": "°C",
+    "Cargo Weight": "kg",
+    "Door Sensor": "boolean",
+    "ECG": "mV",
+    "Engine Temperature": "°C",
+    "Fuel Level": "L",
+    "Gas Detection": "ppm",
+    "GPS": "degrees",
+    "Gyroscope": "°/s",
+    "IMU": "m/s²",
+    "Lane Departure Warning": "cm",
+    "LiDAR": "m",
+    "Oil Pressure": "psi",
+    "Proximity": "cm",
+    "Radar": "m",
+    "Rear Collision Radar": "m",
+    "RFID": "tag_id",
+    "SpO2": "%",
+    "Speed": "km/h",
+    "Tire Pressure": "psi",
+    "Vibration": "g",
+    "Wheel Speed": "rpm",
+    "X-ray Detectors": "grayscale"
+}
+
 // 📊 Generate sensor readings based on type
 function generateSensorReading(sensorType) {
     switch (sensorType) {
         case "Camera": return faker.datatype.boolean();
-        case "LiDAR": return faker.datatype.number({ min: 0, max: 100 });
-        case "Radar": return faker.datatype.number({ min: 0, max: 150 });
+        case "LiDAR": return faker.number.int({ min: 0, max: 100 });
+        case "Radar": return faker.number.int({ min: 0, max: 150 });
         case "GPS": {
             const cities = Object.keys(cityRoutes);
             const randomCity = cities[Math.floor(Math.random() * cities.length)];
             return generateGPS(randomCity);
         }
-        case "IMU": return faker.datatype.float({ min: -10, max: 10 });
-        case "Wheel Speed": return faker.datatype.number({ min: 0, max: 300 });
-        case "Temperature": return faker.datatype.number({ min: -30, max: 50 });
-        case "Blood Pressure": return faker.datatype.number({ min: 80, max: 180 });
-        case "SpO2": return faker.datatype.number({ min: 90, max: 100 });
-        case "Cargo Weight": return faker.datatype.number({ min: 100, max: 2000 });
-        case "Tire Pressure": return faker.datatype.number({ min: 20, max: 40 });
-        case "Speed": return faker.datatype.number({ min: 0, max: 120 });
-        case "Oil Pressure": return faker.datatype.number({ min: 20, max: 100 });
-        default: return faker.datatype.number({ min: 0, max: 100 });
+        case "IMU": return faker.number.float({ min: -10, max: 10 });
+        case "Wheel Speed": return faker.number.int({ min: 0, max: 300 });
+        case "Temperature": return faker.number.int({ min: -30, max: 50 });
+        case "Blood Pressure": return faker.number.int({ min: 80, max: 180 });
+        case "SpO2": return faker.number.int({ min: 90, max: 100 });
+        case "Cargo Weight": return faker.number.int({ min: 100, max: 2000 });
+        case "Tire Pressure": return faker.number.int({ min: 20, max: 40 });
+        case "Speed": return faker.number.int({ min: 0, max: 120 });
+        case "Oil Pressure": return faker.number.int({ min: 20, max: 100 });
+        default: return faker.number.int({ min: 0, max: 100 });
     }
 }
 

@@ -66,10 +66,19 @@ async function mapSensorToDevice(deviceId, sensorId) {
     }
 }
 
-/** 🚀 Send sensor reading */
 async function sendSensorReading(deviceSensorId, time, value) {
     try {
-        await axios.post(`${API_BASE_URL}/sensor-readings`, { device_sensor_id: deviceSensorId, time, value });
+        // Increase precision to microseconds by adding a fractional offset
+        const microseconds = Math.floor(Math.random() * 1000);
+        const adjustedTime = new Date(time.getTime() + microseconds / 1000); // Add fractional milliseconds
+
+        await axios.post(`${API_BASE_URL}/sensor-readings`, {
+            device_sensor_id: deviceSensorId,
+            time: adjustedTime.toISOString(), // Send in ISO format
+            value
+        });
+
+        console.log(`📊 Sent reading: Device-Sensor ${deviceSensorId} => Value: ${value} at ${adjustedTime.toISOString()}`);
     } catch (error) {
         console.error(`❌ Failed to send sensor reading:`, error.response?.data || error.message);
     }
