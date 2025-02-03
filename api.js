@@ -84,7 +84,7 @@ async function registerSensor(type) {
 /** 🚀 Map a sensor to a device */
 async function mapSensorToDevice(deviceId, sensorId) {
     try {
-        await axios.post(`${API_BASE_URL}/device-sensors`, { device_id: deviceId, sensor_id: sensorId })
+        await axios.post(`${API_BASE_URL}/device-sensor`, { device_id: deviceId, sensor_id: sensorId })
     } catch (error) {
         console.error(`❌ Failed to map sensor ${sensorId} to device ${deviceId}:`, error.response?.data || error.message)
     }

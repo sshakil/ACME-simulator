@@ -142,6 +142,7 @@ const simulateSensorReadings = async (fetchMappingsFn, identifier, useCache = tr
     async function sendReadings() {
         console.log(`📡 Fetching device-sensor mappings for ${identifier}...`)
         const mappings = await fetchMappingsFn(!useCache)
+        console.log("mappings, ", mappings)
         if (!mappings.length) {
             console.warn(`⚠️ No mappings found for ${identifier}.`)
             return
