@@ -8,7 +8,7 @@ const fetchFromAPI = async (endpoint, errorMessage, transformResponse = data => 
         const response = await axios.get(`${API_BASE_URL}${endpoint}`)
         return transformResponse(response.data)
     } catch (error) {
-        console.error(`❌ ${errorMessage}:`, error.response?.data || error.message)
+        console.error(`❌ ${errorMessage}:`, `\n${error.message} \n ${error.response?.data}` || error.message)
         return []
     }
 }
@@ -19,7 +19,7 @@ const postToAPI = async (endpoint, data, errorMessage, logResponse = true) => {
         if (logResponse) console.log(`✅ Success:`, response.data)
         return response.data
     } catch (error) {
-        console.error(`❌ ${errorMessage}:`, error.response?.data || error.message)
+        console.error(`❌ ${errorMessage}:`, `\n${error.message} \n ${error.response?.data}` || error.message)
         return null
     }
 }

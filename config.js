@@ -1,7 +1,7 @@
 require("dotenv").config();
 
 module.exports = {
-    API_BASE_URL: process.env.API_BASE_URL || "http://localhost:4000/api",
+    API_BASE_URL: process.env.API_BASE_URL || "http://localhost:4000/acme",
 
     SIMULATION_INTERVAL_MS: parseInt(process.env.SIMULATION_INTERVAL_MS) || 5000,
 
