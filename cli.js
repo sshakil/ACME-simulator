@@ -137,34 +137,19 @@ program
     })
 
 // 🚀 Simulate sensor readings with optional cache
-const simulateSensorReadings = async (fetchMappingsFn, identifier, useCache = true) => {
+const simulateSensorReadings = async (deviceIds = null, useCache, noValidation, noResponseBody) => {
+    const identifier = deviceIds ? `devices: ${deviceIds}` : "all devices"
     console.log(`📡 Starting simulation for ${identifier} every ${SIMULATION_INTERVAL_MS} ms...`)
 
     async function sendReadings() {
-        console.log(`📡 Fetching device-sensor mappings for ${identifier}...`)
-        const mappings = await fetchMappingsFn(!useCache)
-        console.log("mappings, ", mappings)
-        if (!mappings.length) {
-            console.warn(`⚠️ No mappings found for ${identifier}.`)
+        let devices = deviceIds ? deviceIds.map(id => ({ id })) : await getDevices()
+
+        if (!devices.length) {
+            console.warn(`⚠️ No devices found.`)
             return
         }
 
-        for (const {id, sensor_id} of mappings) {
-            const value = generateSensorReading(sensor_id)
-            await sendSensorReading(id, new Date(), value)
-        }
-    }
-
-    await sendReadings()
-    setInterval(sendReadings, SIMULATION_INTERVAL_MS)
-}
-
-// 🚀 Simulate sensor readings with optional cache
-const simulateSensorReadingsForDevices = async (deviceIds, useCache, noValidation, noResponseBody) => {
-    console.log(`📡 Starting simulation for devices: ${deviceIds} every ${SIMULATION_INTERVAL_MS} ms...`)
-
-    async function sendReadings() {
-        for (const deviceId of deviceIds) {
+        for (const { id: deviceId } of devices) {
             console.log(`📡 Fetching device-sensor mappings for device ${deviceId}...`)
             const mappings = await getDeviceSensorMappingsForDevice(deviceId, !useCache)
             if (!mappings.length) {
@@ -172,7 +157,7 @@ const simulateSensorReadingsForDevices = async (deviceIds, useCache, noValidatio
                 continue
             }
 
-            const readings = mappings.map(({id}) => ({
+            const readings = mappings.map(({ id }) => ({
                 device_sensor_id: id,
                 value: generateSensorReading(id)
             }))
@@ -211,18 +196,23 @@ const simulateSensorReadingsForSensors = async (deviceSensorIds, useCache) => {
 program
     .command("simulate-readings-for-all-devices")
     .option("--no-mapping-cache", "Fetch fresh device-sensor mappings before each reading")
+    .option("--no-validation", "Skip validation of sensor mappings")
+    .option("--no-response-body", "Suppress response body from the server")
     .description("Simulate readings for all devices")
-    .action((options) => simulateSensorReadings(fetchDeviceSensorMappings, "all devices", !options.noMappingCache))
+    .action(async (options) => {
+        await simulateSensorReadings(null, !options.noMappingCache, options.noValidation, options.noResponseBody)
+    })
 
+// 🚀 Simulate readings for specified devices
 program
     .command("simulate-readings-for-specified-devices <deviceIds>")
     .option("--no-mapping-cache", "Fetch fresh device-sensor mappings before each reading")
     .option("--no-validation", "Skip validation of sensor mappings")
     .option("--no-response-body", "Suppress response body from the server")
     .description("Simulate readings for specific devices")
-    .action((deviceIds, options) => {
+    .action(async (deviceIds, options) => {
         const parsedDeviceIds = deviceIds.split(",").map(Number)
-        simulateSensorReadingsForDevices(parsedDeviceIds, !options.noMappingCache, options.noValidation, options.noResponseBody)
+        await simulateSensorReadings(parsedDeviceIds, !options.noMappingCache, options.noValidation, options.noResponseBody)
     })
 
 // 🚀 Simulate readings for specific sensors
@@ -230,8 +220,9 @@ program
     .command("simulate-readings-for-specified-sensors <deviceSensorIds>")
     .option("--no-mapping-cache", "Fetch fresh device-sensor mappings before each reading")
     .description("Simulate readings for specific device_sensor_ids")
-    .action((deviceSensorIds, options) => {
+    .action(async (deviceSensorIds, options) => {
         const parsedSensorIds = deviceSensorIds.split(",").map(Number)
-        simulateSensorReadingsForSensors(parsedSensorIds, !options.noMappingCache)
+        await simulateSensorReadingsForSensors(parsedSensorIds, !options.noMappingCache)
     })
+
 program.parse(process.argv)
