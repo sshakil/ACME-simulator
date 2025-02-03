@@ -157,9 +157,11 @@ const simulateSensorReadings = async (deviceIds = null, useCache, noValidation, 
                 continue
             }
 
+            const timestamp = new Date().toISOString()
             const readings = mappings.map(({ id }) => ({
                 device_sensor_id: id,
-                value: generateSensorReading(id)
+                value: generateSensorReading(id),
+                time: timestamp
             }))
 
             await sendSensorReadingsForDevice(deviceId, readings, noValidation, noResponseBody)
