@@ -12,33 +12,50 @@ const simulateSensorReadings = async (deviceIds = null, useCache, noValidation, 
     const identifier = deviceIds ? `devices: ${deviceIds}` : "all devices"
     console.log(`📡 Starting simulation for ${identifier} every ${SIMULATION_INTERVAL_MS} ms...`)
 
-    async function sendReadings() {
-        let devices = deviceIds ? deviceIds.map(id => ({ id })) : await getDevices()
+    async function getDevicesList() {
+        return deviceIds ? deviceIds.map(id => ({ id })) : await getDevices()
+    }
 
+    async function fetchDeviceMappings(deviceId) {
+        console.log(`📡 Fetching device-sensor mappings for device ${deviceId}...`)
+        const mappings = await getDeviceSensorMappingsForDevice(deviceId, !useCache)
+
+        if (!mappings.length) {
+            console.warn(`⚠️ No mappings found for device ${deviceId}.`)
+            console.log("")
+            return []
+        }
+        return mappings
+    }
+
+    function generateReadings(mappings) {
+        const timestamp = new Date().toISOString()
+        return mappings.map(({ id }) => ({
+            device_sensor_id: id,
+            value: generateSensorReading(id),
+            time: timestamp
+        }))
+    }
+
+    async function processDevice(deviceId) {
+        const mappings = await fetchDeviceMappings(deviceId)
+        if (!mappings.length) return
+
+        const readings = generateReadings(mappings)
+        await sendSensorReadingsForDevice(deviceId, readings, noValidation, noResponseBody)
+        console.log("")
+    }
+
+    async function sendReadings() {
+        const devices = await getDevicesList()
         if (!devices.length) {
             console.warn("⚠️ No devices found.")
             console.log("")
             return
         }
 
-        for (const { id: deviceId } of devices) {
-            console.log(`📡 Fetching device-sensor mappings for device ${deviceId}...`)
-            const mappings = await getDeviceSensorMappingsForDevice(deviceId, !useCache)
-            if (!mappings.length) {
-                console.warn(`⚠️ No mappings found for device ${deviceId}.`)
-                console.log("")
-                continue
-            }
-
-            const timestamp = new Date().toISOString()
-            const readings = mappings.map(({ id }) => ({
-                device_sensor_id: id,
-                value: generateSensorReading(id),
-                time: timestamp
-            }))
-
-            await sendSensorReadingsForDevice(deviceId, readings, noValidation, noResponseBody)
-            console.log("")
+        for (const { id } of devices) {
+            await processDevice(id)
         }
     }
 
@@ -50,19 +67,30 @@ const simulateSensorReadings = async (deviceIds = null, useCache, noValidation, 
 const simulateSensorReadingsForSensors = async (deviceSensorIds, useCache) => {
     console.log(`📡 Starting simulation for sensors: ${deviceSensorIds} every ${SIMULATION_INTERVAL_MS} ms...`)
 
-    async function sendReadings() {
+    async function fetchSensorMappings() {
         console.log(`📡 Fetching mappings for sensors: ${deviceSensorIds}`)
         const mappings = await getDeviceSensorMappingsForSensors(deviceSensorIds, !useCache)
+
         if (!mappings.length) {
             console.warn("⚠️ No mappings found for specified sensors.")
             console.log("")
-            return
+            return []
         }
+        return mappings
+    }
+
+    async function processSensor(sensorId) {
+        const value = generateSensorReading(sensorId)
+        await sendSensorReadingsForDevice(sensorId, [{ device_sensor_id: sensorId, value }], false, false)
+        console.log("")
+    }
+
+    async function sendReadings() {
+        const mappings = await fetchSensorMappings()
+        if (!mappings.length) return
 
         for (const { id } of mappings) {
-            const value = generateSensorReading(id)
-            await sendSensorReadingsForDevice(id, [{ device_sensor_id: id, value }], false, false)
-            console.log("")
+            await processSensor(id)
         }
     }
 
