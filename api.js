@@ -24,36 +24,60 @@ async function getSensors() {
     }
 }
 
-/** 🚀 Fetch all device-sensor mappings (always fetches fresh data) */
-async function getDeviceSensorMappings() {
+/** 🚀 Fetch device-sensor mappings for a specific device */
+async function getDeviceSensorMappingsForDevice(deviceId, forceRefresh = false) {
     try {
-        const response = await axios.get(`${API_BASE_URL}/device-sensors`)
+        const response = await axios.get(`${API_BASE_URL}/device-sensors/${deviceId}`)
         return response.data
     } catch (error) {
-        console.error("❌ Failed to fetch device-sensor mappings:", error.response?.data || error.message)
-        return []
-    }
-}
-
-/** 🚀 Fetch device-sensor mappings for specific devices */
-async function getDeviceSensorMappingsForDevices(deviceIds) {
-    try {
-        const mappings = await getDeviceSensorMappings()
-        return mappings.filter(m => deviceIds.includes(m.device_id))
-    } catch (error) {
-        console.error("❌ Failed to fetch mappings for specific devices:", error.response?.data || error.message)
+        console.error(`❌ Failed to fetch mappings for device ${deviceId}:`, error.response?.data || error.message)
         return []
     }
 }
 
 /** 🚀 Fetch device-sensor mappings for specific sensors */
-async function getDeviceSensorMappingsForSensors(deviceSensorIds) {
+async function getDeviceSensorMappingsForSensors(deviceSensorIds, forceRefresh = false) {
     try {
-        const deviceSensors = await getDeviceSensorMappings()
-        return deviceSensors.filter(deviceSensor => deviceSensorIds.includes(deviceSensor.id))
+        const response = await axios.get(`${API_BASE_URL}/device-sensors`)
+        return response.data.filter(m => deviceSensorIds.includes(m.id))
     } catch (error) {
         console.error("❌ Failed to fetch mappings for specific sensors:", error.response?.data || error.message)
         return []
+    }
+}
+
+/** 🚀 Send a batch of sensor readings for a device */
+async function sendSensorReadingsForDevice(deviceId, readings, noValidation = false, noResponseBody = false) {
+    try {
+        const response = await axios.post(`${API_BASE_URL}/sensor-readings/${deviceId}`, {
+            readings,
+            no_validation: noValidation,
+            no_response_body: noResponseBody
+        })
+
+        if (!noResponseBody) {
+            console.log(`📊 Sent readings for device ${deviceId}:`, response.data)
+        }
+    } catch (error) {
+        console.error(`❌ Failed to send sensor readings for device ${deviceId}:`, error.response?.data || error.message)
+    }
+}
+
+/** 🚀 Send a simulated sensor reading */
+async function sendSensorReading(deviceSensorId, time, value) {
+    try {
+        const microseconds = Math.floor(Math.random() * 1000)
+        const adjustedTime = new Date(time.getTime() + microseconds / 1000)
+
+        await axios.post(`${API_BASE_URL}/sensor-readings`, {
+            device_sensor_id: deviceSensorId,
+            time: adjustedTime.toISOString(),
+            value
+        })
+
+        console.log(`📊 Sent reading: Device-Sensor ${deviceSensorId} => Value: ${value} at ${adjustedTime.toISOString()}`)
+    } catch (error) {
+        console.error(`❌ Failed to send sensor reading:`, error.response?.data || error.message)
     }
 }
 
@@ -90,26 +114,7 @@ async function mapSensorToDevice(deviceId, sensorId) {
     }
 }
 
-/** 🚀 Send a simulated sensor reading */
-async function sendSensorReading(deviceSensorId, time, value) {
-    try {
-        const microseconds = Math.floor(Math.random() * 1000)
-        const adjustedTime = new Date(time.getTime() + microseconds / 1000)
-
-        await axios.post(`${API_BASE_URL}/sensor-readings`, {
-            device_sensor_id: deviceSensorId,
-            time: adjustedTime.toISOString(),
-            value
-        })
-
-        console.log(`📊 Sent reading: Device-Sensor ${deviceSensorId} => Value: ${value} at ${adjustedTime.toISOString()}`)
-    } catch (error) {
-        console.error(`❌ Failed to send sensor reading:`, error.response?.data || error.message)
-    }
-}
-
 module.exports = {
-    getDevices, getSensors, getDeviceSensorMappings,
-    getDeviceSensorMappingsForDevices, getDeviceSensorMappingsForSensors,
-    registerDevice, registerSensor, mapSensorToDevice, sendSensorReading
+    getDevices, getSensors, getDeviceSensorMappingsForDevice, getDeviceSensorMappingsForSensors,
+    registerDevice, registerSensor, mapSensorToDevice, sendSensorReading, sendSensorReadingsForDevice
 }
