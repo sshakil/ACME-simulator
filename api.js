@@ -1,25 +1,27 @@
 const axios = require("axios")
 require("dotenv").config()
 const { API_BASE_URL, SENSOR_UNITS } = require("./config")
+const { log } = require("./utils")
 
 // 🔧 Utility: Handle API requests with error handling
 const fetchFromAPI = async (endpoint, errorMessage, transformResponse = data => data) => {
     try {
         const response = await axios.get(`${API_BASE_URL}${endpoint}`)
+        log(`📡 Fetching from ${endpoint}:`, response.data)
         return transformResponse(response.data)
     } catch (error) {
-        console.error(`❌ ${errorMessage}:`, `\n${error.message} \n ${error.response?.data}` || error.message)
+        log(`❌ ${errorMessage}:`, error.message, error.response?.data || "")
         return []
     }
 }
 
-const postToAPI = async (endpoint, data, errorMessage, logResponse = true) => {
+const postToAPI = async (endpoint, data, errorMessage) => {
     try {
         const response = await axios.post(`${API_BASE_URL}${endpoint}`, data)
-        if (logResponse) console.log(`✅ Success:`, response.data)
+        log(`✅ Success: ${endpoint}`, response.data)
         return response.data
     } catch (error) {
-        console.error(`❌ ${errorMessage}:`, `\n${error.message} \n ${error.response?.data}` || error.message)
+        log(`❌ ${errorMessage}:`, error.message, error.response?.data || "")
         return null
     }
 }
@@ -47,7 +49,7 @@ const getDeviceSensorMappingsForSensors = (deviceSensorIds) =>
 /** 🚀 Send a batch of sensor readings for a device */
 const sendSensorReadingsForDevice = (deviceId, readings, noValidation = false, noResponseBody = false) =>
     postToAPI(`/sensor-readings/${deviceId}`, { readings, no_validation: noValidation, no_response_body: noResponseBody },
-        `Failed to send sensor readings for device ${deviceId}`, !noResponseBody)
+        `Failed to send sensor readings for device ${deviceId}`)
 
 /** 🚀 Send a single sensor reading */
 const sendSensorReading = async (deviceSensorId, time, value) => {
@@ -57,7 +59,7 @@ const sendSensorReading = async (deviceSensorId, time, value) => {
     await postToAPI("/sensor-readings", { device_sensor_id: deviceSensorId, time: adjustedTime.toISOString(), value },
         `Failed to send sensor reading`)
 
-    console.log(`📊 Sent reading: Device-Sensor ${deviceSensorId} => Value: ${value} at ${adjustedTime.toISOString()}`)
+    log(`📊 Sent reading: Device-Sensor ${deviceSensorId} => Value: ${value} at ${adjustedTime.toISOString()}`)
 }
 
 /** 🚀 Register a device */
@@ -75,7 +77,7 @@ const registerSensor = (type) => {
 /** 🚀 Map a sensor to a device */
 const mapSensorToDevice = (deviceId, sensorId) =>
     postToAPI("/device-sensors", { device_id: deviceId, sensor_id: sensorId },
-        `Failed to map sensor ${sensorId} to device ${deviceId}`, false)
+        `Failed to map sensor ${sensorId} to device ${deviceId}`)
 
 module.exports = {
     getDevices, getSensors, getDeviceSensorMappingsForDevice, getDeviceSensorMappingsForSensors,

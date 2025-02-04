@@ -1,11 +1,17 @@
-const { registerDevice, registerAndMapDeviceSensors} = require("../api")
-const { DEVICE_TYPES, SENSOR_UNITS} = require("../config")
+const { registerDevice, registerAndMapDeviceSensors } = require("../api")
+const { DEVICE_TYPES, SENSOR_UNITS } = require("../config")
+const { log } = require("../utils")
 const crypto = require("crypto")
 
 // 🔧 Utility: Register and map sensors for a device
 const registerAndMapSensors = async (deviceId, deviceType) => {
     if (!DEVICE_TYPES[deviceType]) {
-        console.warn(`⚠️ Unknown device type '${deviceType}'.`)
+        log(`⚠️ Unknown device type '${deviceType}'.`)
+        return
+    }
+
+    if (!deviceId) {
+        log(`⚠️ deviceId is undefined`)
         return
     }
 
@@ -14,10 +20,9 @@ const registerAndMapSensors = async (deviceId, deviceType) => {
         unit: SENSOR_UNITS[type] || "unknown"
     }))
 
-    console.log(`📡 Registering and mapping ${sensors.length} sensors for device ${deviceId}...`)
+    log(`📡 Registering and mapping ${sensors.length} sensors for device ${deviceId}...`)
     await registerAndMapDeviceSensors(deviceId, sensors)
 }
-
 
 module.exports = (program) => {
     // 🚀 Register multiple devices
@@ -25,7 +30,7 @@ module.exports = (program) => {
         .command("register-devices <devices>")
         .description("Registers multiple devices (e.g., train=2,truck=1,car=3)")
         .action(async (devices) => {
-            console.log("🚀 Registering devices and sensors...")
+            log("🚀 Registering devices and sensors...")
 
             const deviceCounts = devices.match(/(?:[^\s,"]+|"[^"]*")+/g).reduce((acc, item) => {
                 const [deviceType, count] = item.split("=")
@@ -35,8 +40,8 @@ module.exports = (program) => {
 
             for (const [deviceType, count] of Object.entries(deviceCounts)) {
                 if (!DEVICE_TYPES[deviceType]) {
-                    console.warn(`⚠️ Unknown device type '${deviceType}'. Use 'add-device-type' first.`)
-                    console.log("")
+                    log(`⚠️ Unknown device type '${deviceType}'. Use 'add-device-type' first.`)
+                    log("")
                     continue
                 }
 
@@ -44,13 +49,15 @@ module.exports = (program) => {
                     const uid = crypto.randomUUID()
                     const device = await registerDevice(`${deviceType} #${uid}`, deviceType)
                     if (device) {
-                        console.log(`✅ Registered: ${device.name} (ID: ${device.id})`)
+                        log(`✅ Registered: ${device.type} (ID: ${device.id})`)
+                        log(device)
                         await registerAndMapSensors(device.id, deviceType)
                     }
                 }
             }
-            console.log("🎉 All devices registered successfully")
-            console.log("")
+
+            log("🎉 All devices registered successfully")
+            log("")
         })
 
     // 🚀 Register a single device
@@ -59,19 +66,20 @@ module.exports = (program) => {
         .option("--no-sensors", "Do not auto-map sensors to the device")
         .description("Registers a single device")
         .action(async (name, type, options) => {
-            console.log(`🔄 Registering device: ${name} (Type: ${type})`)
+            log(`🔄 Registering device: ${name} (Type: ${type})`)
 
             if (!DEVICE_TYPES[type]) {
-                console.warn(`⚠️ Unknown device type '${type}'. Use 'add-device-type' first.`)
-                console.log("")
+                log(`⚠️ Unknown device type '${type}'. Use 'add-device-type' first.`)
+                log("")
                 return
             }
 
             const device = await registerDevice(name, type)
             if (device) {
-                console.log(`✅ Registered: ${name} (ID: ${device.id})`)
+                log(`✅ Registered: ${name} (ID: ${device.id})`)
+                log(`device: ${device}`)
                 if (!options.noSensors) await registerAndMapSensors(device.id, type)
             }
-            console.log("")
+            log("")
         })
 }

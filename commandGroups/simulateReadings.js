@@ -6,23 +6,24 @@ const {
     sendSensorReadingsForDevice
 } = require("../api")
 const { generateSensorReading } = require("../generator")
+const { log } = require("../utils")
 
 // 🔧 Utility: Simulate sensor readings with optional cache
 const simulateSensorReadings = async (deviceIds = null, useCache, noValidation, noResponseBody) => {
     const identifier = deviceIds ? `devices: ${deviceIds}` : "all devices"
-    console.log(`📡 Starting simulation for ${identifier} every ${SIMULATION_INTERVAL_MS} ms...`)
+    log(`📡 Starting simulation for ${identifier} every ${SIMULATION_INTERVAL_MS} ms...`)
 
     async function getDevicesList() {
         return deviceIds ? deviceIds.map(id => ({ id })) : await getDevices()
     }
 
     async function fetchDeviceMappings(deviceId) {
-        console.log(`📡 Fetching device-sensor mappings for device ${deviceId}...`)
+        log(`📡 Fetching device-sensor mappings for device ${deviceId}...`)
         const mappings = await getDeviceSensorMappingsForDevice(deviceId, !useCache)
 
         if (!mappings.length) {
-            console.warn(`⚠️ No mappings found for device ${deviceId}.`)
-            console.log("")
+            log(`⚠️ No mappings found for device ${deviceId}.`)
+            log("")
             return []
         }
         return mappings
@@ -43,14 +44,14 @@ const simulateSensorReadings = async (deviceIds = null, useCache, noValidation, 
 
         const readings = generateReadings(mappings)
         await sendSensorReadingsForDevice(deviceId, readings, noValidation, noResponseBody)
-        console.log("")
+        log("")
     }
 
     async function sendReadings() {
         const devices = await getDevicesList()
         if (!devices.length) {
-            console.warn("⚠️ No devices found.")
-            console.log("")
+            log("⚠️ No devices found.")
+            log("")
             return
         }
 
@@ -65,15 +66,15 @@ const simulateSensorReadings = async (deviceIds = null, useCache, noValidation, 
 
 // 🔧 Utility: Simulate sensor readings for specified sensors
 const simulateSensorReadingsForSensors = async (deviceSensorIds, useCache) => {
-    console.log(`📡 Starting simulation for sensors: ${deviceSensorIds} every ${SIMULATION_INTERVAL_MS} ms...`)
+    log(`📡 Starting simulation for sensors: ${deviceSensorIds} every ${SIMULATION_INTERVAL_MS} ms...`)
 
     async function fetchSensorMappings() {
-        console.log(`📡 Fetching mappings for sensors: ${deviceSensorIds}`)
+        log(`📡 Fetching mappings for sensors: ${deviceSensorIds}`)
         const mappings = await getDeviceSensorMappingsForSensors(deviceSensorIds, !useCache)
 
         if (!mappings.length) {
-            console.warn("⚠️ No mappings found for specified sensors.")
-            console.log("")
+            log("⚠️ No mappings found for specified sensors.")
+            log("")
             return []
         }
         return mappings
@@ -82,7 +83,7 @@ const simulateSensorReadingsForSensors = async (deviceSensorIds, useCache) => {
     async function processSensor(sensorId) {
         const value = generateSensorReading(sensorId)
         await sendSensorReadingsForDevice(sensorId, [{ device_sensor_id: sensorId, value }], false, false)
-        console.log("")
+        log("")
     }
 
     async function sendReadings() {
