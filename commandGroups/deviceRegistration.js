@@ -1,16 +1,21 @@
-const { registerDevice, registerSensor, mapSensorToDevice } = require("../api")
-const { DEVICE_TYPES } = require("../config")
+const { registerDevice, registerAndMapDeviceSensors} = require("../api")
+const { DEVICE_TYPES, SENSOR_UNITS} = require("../config")
 const crypto = require("crypto")
 
-// 🔧 Utility: Register sensors for a device
+// 🔧 Utility: Register and map sensors for a device
 const registerAndMapSensors = async (deviceId, deviceType) => {
-    for (const sensorType of DEVICE_TYPES[deviceType]) {
-        const sensor = await registerSensor(sensorType)
-        if (sensor) {
-            console.log(`🔧 Sensor registered: ${sensorType} (ID: ${sensor.id})`)
-            await mapSensorToDevice(deviceId, sensor.id)
-        }
+    if (!DEVICE_TYPES[deviceType]) {
+        console.warn(`⚠️ Unknown device type '${deviceType}'.`)
+        return
     }
+
+    const sensors = DEVICE_TYPES[deviceType].map(type => ({
+        type,
+        unit: SENSOR_UNITS[type] || "unknown"
+    }))
+
+    console.log(`📡 Registering and mapping ${sensors.length} sensors for device ${deviceId}...`)
+    await registerAndMapDeviceSensors(deviceId, sensors)
 }
 
 

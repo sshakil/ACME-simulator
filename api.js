@@ -24,6 +24,11 @@ const postToAPI = async (endpoint, data, errorMessage, logResponse = true) => {
     }
 }
 
+/** 🚀 Bulk create sensors and map them to a device */
+const registerAndMapDeviceSensors = async (deviceId, sensors) => {
+    return await postToAPI(`/devices/${deviceId}/sensors`, sensors, `Failed to register and map sensors for device ${deviceId}`)
+}
+
 /** 🚀 Fetch all registered devices */
 const getDevices = () => fetchFromAPI("/devices", "Failed to fetch devices")
 
@@ -59,12 +64,14 @@ const sendSensorReading = async (deviceSensorId, time, value) => {
 const registerDevice = (name, type) =>
     postToAPI("/devices", { name, type }, `Failed to register device (${name})`)
 
+// TODO: unused - remove or support on CLI
 /** 🚀 Register a sensor */
 const registerSensor = (type) => {
     const unit = SENSOR_UNITS[type] || "unknown"
     return postToAPI("/sensors", { type, unit }, `Failed to register sensor (${type})`)
 }
 
+// TODO: unused - remove or support on CLI
 /** 🚀 Map a sensor to a device */
 const mapSensorToDevice = (deviceId, sensorId) =>
     postToAPI("/device-sensors", { device_id: deviceId, sensor_id: sensorId },
@@ -72,5 +79,6 @@ const mapSensorToDevice = (deviceId, sensorId) =>
 
 module.exports = {
     getDevices, getSensors, getDeviceSensorMappingsForDevice, getDeviceSensorMappingsForSensors,
-    registerDevice, registerSensor, mapSensorToDevice, sendSensorReading, sendSensorReadingsForDevice
+    registerDevice, registerSensor, mapSensorToDevice, sendSensorReading, sendSensorReadingsForDevice,
+    registerAndMapDeviceSensors
 }
