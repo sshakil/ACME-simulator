@@ -1,4 +1,4 @@
-const { registerDevice, registerAndMapDeviceSensors } = require("../api")
+const { registerDevice, deleteDevice, registerAndMapDeviceSensors } = require("../api")
 const { DEVICE_TYPES, SENSOR_UNITS } = require("../config")
 const { log } = require("../utils")
 const crypto = require("crypto")
@@ -60,7 +60,7 @@ module.exports = (program) => {
             log("")
         })
 
-    // 🚀 Register a single device
+    // 🚀 Register a device
     program
         .command("register-device <name> <type>")
         .option("--no-sensors", "Do not auto-map sensors to the device")
@@ -81,5 +81,20 @@ module.exports = (program) => {
                 if (!options.noSensors) await registerAndMapSensors(device.id, type)
             }
             log("")
+        })
+
+    // 🚀 Delete a device
+    program
+        .command("delete-device <id>")
+        .description("Deletes a device")
+        .action(async (id) => {
+            try {
+                await deleteDevice(id)
+                log(`✅ Successfully deleted device with id: ${id}`)
+                process.exit(0)
+            } catch (error) {
+                log("❌", error.message, error.response?.data || "")
+                process.exit(1)
+            }
         })
 }

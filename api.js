@@ -15,20 +15,20 @@ const fetchFromAPI = async (endpoint, errorMessage, transformResponse = data => 
     }
 }
 
-const postToAPI = async (endpoint, data, errorMessage) => {
+const postOnAPI = async (endpoint, data, errorMessage) => {
     try {
         const response = await axios.post(`${API_BASE_URL}${endpoint}`, data)
-        log(`✅ Success: ${endpoint}`, response.data)
+        log(`✅ Successful POST on: ${endpoint}`, response.data)
         return response.data
     } catch (error) {
         log(`❌ ${errorMessage}:`, error.message, error.response?.data || "")
-        return null
+        throw error
     }
 }
 
 /** 🚀 Bulk create sensors and map them to a device */
 const registerAndMapDeviceSensors = async (deviceId, sensors) => {
-    return await postToAPI(`/devices/${deviceId}/sensors`, sensors, `Failed to register and map sensors for device ${deviceId}`)
+    return await postOnAPI(`/devices/${deviceId}/sensors`, sensors, `Failed to register and map sensors for device ${deviceId}`)
 }
 
 /** 🚀 Fetch all registered devices */
@@ -48,7 +48,7 @@ const getDeviceSensorMappingsForSensors = (deviceSensorIds) =>
 
 /** 🚀 Send a batch of sensor readings for a device */
 const sendSensorReadingsForDevice = (deviceId, readings, noValidation = false, noResponseBody = false) =>
-    postToAPI(`/sensor-readings/${deviceId}`, { readings, no_validation: noValidation, no_response_body: noResponseBody },
+    postOnAPI(`/sensor-readings/${deviceId}`, { readings, no_validation: noValidation, no_response_body: noResponseBody },
         `Failed to send sensor readings for device ${deviceId}`)
 
 /** 🚀 Send a single sensor reading */
@@ -56,7 +56,7 @@ const sendSensorReading = async (deviceSensorId, time, value) => {
     const microseconds = Math.floor(Math.random() * 1000)
     const adjustedTime = new Date(time.getTime() + microseconds / 1000)
 
-    await postToAPI("/sensor-readings", { device_sensor_id: deviceSensorId, time: adjustedTime.toISOString(), value },
+    await postOnAPI("/sensor-readings", { device_sensor_id: deviceSensorId, time: adjustedTime.toISOString(), value },
         `Failed to send sensor reading`)
 
     log(`📊 Sent reading: Device-Sensor ${deviceSensorId} => Value: ${value} at ${adjustedTime.toISOString()}`)
@@ -64,23 +64,32 @@ const sendSensorReading = async (deviceSensorId, time, value) => {
 
 /** 🚀 Register a device */
 const registerDevice = (name, type) =>
-    postToAPI("/devices", { name, type }, `Failed to register device (${name})`)
+    postOnAPI("/devices", { name, type }, `Failed to register device (${name})`)
+
+const deleteDevice = async (id) => {
+    await axios.delete(`${API_BASE_URL}/devices/${id}`)
+}
 
 // TODO: unused - remove or support on CLI
 /** 🚀 Register a sensor */
 const registerSensor = (type) => {
     const unit = SENSOR_UNITS[type] || "unknown"
-    return postToAPI("/sensors", { type, unit }, `Failed to register sensor (${type})`)
+    return postOnAPI("/sensors", { type, unit }, `Failed to register sensor (${type})`)
 }
 
 // TODO: unused - remove or support on CLI
 /** 🚀 Map a sensor to a device */
 const mapSensorToDevice = (deviceId, sensorId) =>
-    postToAPI("/device-sensors", { device_id: deviceId, sensor_id: sensorId },
+    postOnAPI("/device-sensors", { device_id: deviceId, sensor_id: sensorId },
         `Failed to map sensor ${sensorId} to device ${deviceId}`)
 
 module.exports = {
-    getDevices, getSensors, getDeviceSensorMappingsForDevice, getDeviceSensorMappingsForSensors,
-    registerDevice, registerSensor, mapSensorToDevice, sendSensorReading, sendSensorReadingsForDevice,
-    registerAndMapDeviceSensors
+    getDevices,
+    registerDevice,
+    deleteDevice,
+
+    getSensors, registerSensor, registerAndMapDeviceSensors, mapSensorToDevice,
+    getDeviceSensorMappingsForDevice, getDeviceSensorMappingsForSensors,
+
+    sendSensorReading, sendSensorReadingsForDevice,
 }

@@ -5,7 +5,7 @@ module.exports = {
 
     SIMULATION_INTERVAL_MS: parseInt(process.env.SIMULATION_INTERVAL_MS) || 5000,
 
-    LOG_LEVEL: process.env.LOG_LEVEL?.toLowerCase() || "typical",
+    LOG_LEVEL: process.env.LOG_LEVEL?.toLowerCase() || "verbose",
 
     DEVICE_TYPES: {
         "car": ["Camera", "LiDAR", "Radar", "GPS", "IMU"],

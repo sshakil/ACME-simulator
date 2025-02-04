@@ -9,7 +9,7 @@ const log = (...args) => {
         return
     }
 
-    // Default: 'typical' logs everything
+    // Default: 'verbose' logs everything
     console.log(...args)
 }
 
