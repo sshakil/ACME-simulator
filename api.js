@@ -67,7 +67,7 @@ const registerSensor = (type) => {
 
 /** 🚀 Map a sensor to a device */
 const mapSensorToDevice = (deviceId, sensorId) =>
-    postToAPI("/device-sensor", { device_id: deviceId, sensor_id: sensorId },
+    postToAPI("/device-sensors", { device_id: deviceId, sensor_id: sensorId },
         `Failed to map sensor ${sensorId} to device ${deviceId}`, false)
 
 module.exports = {
