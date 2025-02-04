@@ -1,6 +1,5 @@
 const { faker } = require('@faker-js/faker')
 const turf = require('@turf/turf')
-const { SENSOR_UNITS } = require('./config') // DRY up sensor units from config
 
 // 📌 Road & Highway GPS Routes (Simplified, Expand as Needed)
 const cityRoutes = {
@@ -20,62 +19,6 @@ const cityRoutes = {
         [-75.6598, 45.4602], // Near Vanier
         [-75.6453, 45.4701]  // Approaching suburbs
     ],
-    "Calgary": [
-        [-114.0719, 51.0447], // Downtown Calgary
-        [-114.0785, 51.0511], // Beltline
-        [-114.0857, 51.0592], // Sunnyside
-        [-114.1038, 51.0723], // Towards Crowchild Trail
-        [-114.1163, 51.0817], // Near Northland Mall
-        [-114.1294, 51.0895]  // Outer Calgary
-    ],
-    "Edmonton": [
-        [-113.4938, 53.5461], // Downtown Edmonton
-        [-113.5015, 53.5519], // Rogers Place
-        [-113.5098, 53.5587], // Near Westmount
-        [-113.5274, 53.5702], // Approaching Groat Road
-        [-113.5437, 53.5786], // Near West Edmonton
-        [-113.5611, 53.5872]  // Moving towards suburbs
-    ],
-    "Montreal": [
-        [-73.5673, 45.5017], // Old Montreal
-        [-73.5619, 45.5087], // Place des Arts
-        [-73.5548, 45.5162], // Plateau Mont-Royal
-        [-73.5419, 45.5271], // Near Jean-Talon Market
-        [-73.5301, 45.5385], // Towards north Montreal
-        [-73.5182, 45.5507]  // Approaching Laval
-    ],
-    "Quebec": [
-        [-71.2082, 46.8139], // Old Quebec
-        [-71.2050, 46.8202], // Montcalm area
-        [-71.2015, 46.8271], // Near Grande-Allée
-        [-71.1923, 46.8385], // Towards Sainte-Foy
-        [-71.1817, 46.8502], // Near Laval University
-        [-71.1701, 46.8623]  // Further suburbs
-    ],
-    "Winnipeg": [
-        [-97.1384, 49.8951], // Downtown Winnipeg
-        [-97.1445, 49.9002], // Exchange District
-        [-97.1523, 49.9081], // Near Health Sciences Centre
-        [-97.1627, 49.9183], // Approaching Polo Park
-        [-97.1731, 49.9267], // Near St. James
-        [-97.1836, 49.9342]  // Outer Winnipeg suburbs
-    ],
-    "Regina": [
-        [-104.6189, 50.4452], // Downtown Regina
-        [-104.6124, 50.4512], // Near Wascana Park
-        [-104.6067, 50.4578], // Cathedral area
-        [-104.5979, 50.4661], // Towards Trans-Canada Hwy
-        [-104.5893, 50.4729], // Near East Regina
-        [-104.5787, 50.4813]  // Outer Regina suburbs
-    ],
-    "Vancouver": [
-        [-123.1216, 49.2827], // Downtown Vancouver
-        [-123.1138, 49.2901], // West End
-        [-123.1059, 49.2976], // Near Science World
-        [-123.0923, 49.3075], // Approaching Commercial Drive
-        [-123.0784, 49.3178], // Towards Burnaby
-        [-123.0651, 49.3284]  // Metrotown area
-    ]
 }
 
 // 🚗 Track previous GPS points per city
