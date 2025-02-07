@@ -41,7 +41,7 @@ const simulateSensorReadings = async (deviceIds = null, useCache, validateMappin
 
         // If caching is disabled, always fetch fresh mappings
         log(`📡 Fetching fresh mappings for device ${deviceId} (cache disabled)...`)
-        return await getDeviceSensorMappingsForDevice(deviceId, true)
+        return getDeviceSensorMappingsForDevice(deviceId, true);
     }
 
     function generateReadings(mappings) {
@@ -86,12 +86,12 @@ module.exports = (program) => {
         .option("--no-mapping-cache", "Fetch fresh device-sensor mappings before each reading")
         .option("--no-validate-mappings", "Skip validation of sensor mappings")
         .option("--no-response-body", "Suppress response body from the server")
-        .description("Simulate readings for specific devices")
+        .description("Simulate readings for specific devices. E.g.: 'node cli.js simulate-readings-for-devices 1,2' ")
         .action(async (deviceIds, options) => {
 
-            console.log(`Use Mapping Cache: ${!!options.mappingCache}`)
-            console.log(`Validate Mappings: ${!!options.validateMappings}`)
-            console.log(`Return Response Body: ${!!options.responseBody}`)
+            log(`Use Mapping Cache: ${!!options.mappingCache}`)
+            log(`Validate Mappings: ${!!options.validateMappings}`)
+            log(`Return Response Body: ${!!options.responseBody}`)
 
             const parsedDeviceIds = deviceIds.split(",").map(Number)
             await simulateSensorReadings(parsedDeviceIds, !!options.mappingCache, options.validateMappings, !!options.responseBody)

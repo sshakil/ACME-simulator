@@ -4,8 +4,7 @@ const log = (...args) => {
     if (LOG_LEVEL === "disabled") return
 
     if (LOG_LEVEL === "minimal") {
-        // Print only the first argument, assuming it contains success/failure messages
-        console.log(args[0])
+        console.log(args[0]) // Only log the main message
         return
     }
 

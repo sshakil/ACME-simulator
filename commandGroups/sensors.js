@@ -3,20 +3,11 @@ const { log } = require("../utils")
 
 module.exports = (program) => {
     program
-        .command("list-sensors")
-        .description("Get list of sensors")
-        .action(async (options) => {
-
-            await getSensors()
-            log("")
-        })
-
-    program
         .command("update-sensor")
         .requiredOption("-i, --sensor-id <id>", "Sensor with ID to update")
         .option("-t, --type <newType>", "New sensor type")
         .option("-u, --unit <newUnit>", "New sensor unit")
-        .description("Update the type and/or unit of a given sensor")
+        .description("Update the type and/or unit of a given sensor. E.g.: `node cli.js update-sensor -i 1 -u \"px\"`")
         .action(async (options) => {
             const { sensorId, type, unit } = options
 

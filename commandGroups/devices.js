@@ -28,7 +28,7 @@ module.exports = (program) => {
 
     program
         .command("register-devices <devices>")
-        .description("Registers multiple devices (e.g., train=2,truck=1,car=3)")
+        .description("Registers multiple devices. E.g.: `node cli.js `node cli.js register-devices \"car=2,truck=2\"`")
         .action(async (devices) => {
             log("🚀 Registering devices and sensors...")
 
@@ -61,30 +61,8 @@ module.exports = (program) => {
         })
 
     program
-        .command("register-device <name> <type>")
-        .option("--no-sensors", "Do not auto-map sensors to the device")
-        .description("Registers a single device")
-        .action(async (name, type, options) => {
-            log(`🔄 Registering device: ${name} (Type: ${type})`)
-
-            if (!DEVICE_TYPES[type]) {
-                log(`⚠️ Unknown device type '${type}'. Use 'add-device-type' first.`)
-                log("")
-                return
-            }
-
-            const device = await registerDevice(name, type)
-            if (device) {
-                log(`✅ Registered: ${name} (ID: ${device.id})`)
-                log(`device: ${device}`)
-                if (!options.noSensors) await registerAndMapSensors(device.id, type)
-            }
-            log("")
-        })
-
-    program
         .command("delete-device <id>")
-        .description("Deletes a device")
+        .description("Deletes a device. E.g.: `node cli.js delete-device 8`")
         .action(async (id) => {
             try {
                 await deleteDevice(id)
@@ -96,25 +74,4 @@ module.exports = (program) => {
             }
         })
 
-    program
-        .command("detach-device-sensor")
-        .requiredOption("-d, --device-id <deviceId>", "Device with ID to detach sensor from")
-        .requiredOption("-i, --sensor-id <id>", "Sensor with ID to detach")
-        .description("Detach sensor with ID from device with ID")
-        .action(async (options) => {
-            const {sensorId, deviceId} = options
-            log(`✅ Sensor ${sensorId} detached from ${deviceId}`)
-            log("")
-        })
-
-    program
-        .command("attach-device-sensor")
-        .requiredOption("-d, --device-id <deviceId>", "Device with ID to attach sensor to")
-        .requiredOption("-i, --sensor-id <id>", "Sensor with ID detach")
-        .description("Attach sensor with ID to device with ID")
-        .action(async (options) => {
-            const {sensorId, deviceId} = options
-            log(`✅ Sensor ${sensorId} attached to ${deviceId}`)
-            log("")
-        })
 }
