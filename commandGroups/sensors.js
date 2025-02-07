@@ -1,4 +1,4 @@
-const { addDeviceType, addSensorType } = require("../config")
+const { addDeviceType } = require("../config")
 const { getDevices, getSensors, getDeviceSensorMappings } = require("../api")
 const { log } = require("../utils")
 
@@ -16,27 +16,19 @@ const fetchDeviceSensorMappings = async (forceRefresh = false) => {
 }
 
 module.exports = (program) => {
-    // 🚀 Add a new device type
+
     program
-        .command("add-device-type <type> <sensors>")
-        .description("Adds a new device type (e.g., drone 'GPS, LiDAR, IMU')")
-        .action(async (type, sensors) => {
-            addDeviceType(type, sensors.split(",").map(s => s.trim()))
-            log(`✅ Device type '${type}' added with sensors: ${sensors}`)
+        .command("update-sensor")
+        .requiredOption("-i, --sensor-id <id>", "Sensor ID to update")
+        .requiredOption("-t, --type <newType>", "New sensor type")
+        .requiredOption("-u, --unit <newUnit>", "New sensor unit")
+        .description("Update the type and unit of a given sensor")
+        .action(async (options) => {
+            const {sensorId, type, unit} = options
+            log(`✅ Sensor ${sensorId} updated with ${[type, unit].filter(Boolean).join(", ")}`)
             log("")
         })
 
-    // 🚀 Add a new sensor
-    program
-        .command("add-sensor <type> <unit>")
-        .description("Adds a new sensor type (e.g., CO2 Sensor ppm)")
-        .action(async (type, unit) => {
-            await addSensorType(type, unit)
-            log(`✅ Sensor '${type}' added with unit: ${unit}`)
-            log("")
-        })
-
-    // 🚀 Get sensor mappings for a device
     program
         .command("get-device-mappings <deviceName>")
         .description("Retrieves all sensor mappings for a specific device")
