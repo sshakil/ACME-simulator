@@ -3,8 +3,8 @@ require("dotenv").config()
 const { API_BASE_URL, SENSOR_UNITS } = require("./config")
 const { log } = require("./utils")
 
-// 🔧 Utility: Handle API requests with error handling
-const fetchFromAPI = async (endpoint, errorMessage, transformResponse = data => data) => {
+/* Fetch data from API with error handling */
+const getFromAPI = async (endpoint, errorMessage, transformResponse = data => data) => {
     try {
         const response = await axios.get(`${API_BASE_URL}${endpoint}`)
         log(`📡 Fetching from ${endpoint}:`, response.data)
@@ -15,9 +15,11 @@ const fetchFromAPI = async (endpoint, errorMessage, transformResponse = data => 
     }
 }
 
+/* Post data to API with error handling */
 const postOnAPI = async (endpoint, data, errorMessage) => {
     try {
         const response = await axios.post(`${API_BASE_URL}${endpoint}`, data)
+        log(response.data)
         log(`✅ Successful POST on: ${endpoint}`, response.data)
         return response.data
     } catch (error) {
@@ -26,32 +28,23 @@ const postOnAPI = async (endpoint, data, errorMessage) => {
     }
 }
 
-/** 🚀 Bulk create sensors and map them to a device */
-const registerAndMapDeviceSensors = async (deviceId, sensors) => {
-    return await postOnAPI(`/devices/${deviceId}/sensors`, sensors, `Failed to register and map sensors for device ${deviceId}`)
-}
+/* Bulk create and map sensors to a device */
+const registerAndMapDeviceSensors = async (deviceId, sensors) =>
+    postOnAPI(`/devices/${deviceId}/sensors`, sensors, `Failed to register and map sensors for device ${deviceId}`)
 
-/** 🚀 Fetch all registered devices */
-const getDevices = () => fetchFromAPI("/devices", "Failed to fetch devices")
+/* Get all registered devices */
+const getDevices = () => getFromAPI("/devices", "Failed to get devices")
 
-/** 🚀 Fetch all registered sensors */
-const getSensors = () => fetchFromAPI("/sensors", "Failed to fetch sensors")
-
-/** 🚀 Fetch device-sensor mappings for a specific device */
+/* Get sensor mappings for a specific device */
 const getDeviceSensorMappingsForDevice = (deviceId) =>
-    fetchFromAPI(`/device-sensors/${deviceId}`, `Failed to fetch mappings for device ${deviceId}`)
+    getFromAPI(`/device-sensors/${deviceId}`, `Failed to get mappings for device ${deviceId}`)
 
-/** 🚀 Fetch device-sensor mappings for specific sensors */
-const getDeviceSensorMappingsForSensors = (deviceSensorIds) =>
-    fetchFromAPI("/device-sensors", "Failed to fetch mappings for specific sensors",
-        data => data.filter(m => deviceSensorIds.includes(m.id)))
-
-/** 🚀 Send a batch of sensor readings for a device */
-const sendSensorReadingsForDevice = (deviceId, readings, noValidation = false, noResponseBody = false) =>
-    postOnAPI(`/sensor-readings/${deviceId}`, { readings, no_validation: noValidation, no_response_body: noResponseBody },
+/* Send multiple sensor readings for a device */
+const sendSensorReadingsForDevice = (deviceId, readings, validateMappings = false, responseBody = false) =>
+    postOnAPI(`/sensor-readings/${deviceId}`, { readings, validateMappings, responseBody },
         `Failed to send sensor readings for device ${deviceId}`)
 
-/** 🚀 Send a single sensor reading */
+/* Send a single sensor reading */
 const sendSensorReading = async (deviceSensorId, time, value) => {
     const microseconds = Math.floor(Math.random() * 1000)
     const adjustedTime = new Date(time.getTime() + microseconds / 1000)
@@ -62,34 +55,30 @@ const sendSensorReading = async (deviceSensorId, time, value) => {
     log(`📊 Sent reading: Device-Sensor ${deviceSensorId} => Value: ${value} at ${adjustedTime.toISOString()}`)
 }
 
-/** 🚀 Register a device */
+/* Register a new device */
 const registerDevice = (name, type) =>
     postOnAPI("/devices", { name, type }, `Failed to register device (${name})`)
 
+/* Delete a device by ID */
 const deleteDevice = async (id) => {
     await axios.delete(`${API_BASE_URL}/devices/${id}`)
 }
 
-// TODO: unused - remove or support on CLI
-/** 🚀 Register a sensor */
-const registerSensor = (type) => {
-    const unit = SENSOR_UNITS[type] || "unknown"
-    return postOnAPI("/sensors", { type, unit }, `Failed to register sensor (${type})`)
-}
+/* Update a sensor by ID */
+const updateSensor = (sensorId, type, unit) =>
+    postOnAPI(`/sensors/${sensorId}`, { type, unit }, `Failed to update sensor with ID ${sensorId}`)
 
-// TODO: unused - remove or support on CLI
-/** 🚀 Map a sensor to a device */
-const mapSensorToDevice = (deviceId, sensorId) =>
-    postOnAPI("/device-sensors", { device_id: deviceId, sensor_id: sensorId },
-        `Failed to map sensor ${sensorId} to device ${deviceId}`)
+/* Get all sensors */
+const getSensors = () => getFromAPI("/sensors", "Failed to get sensors")
 
 module.exports = {
     getDevices,
     registerDevice,
     deleteDevice,
-
-    getSensors, registerSensor, registerAndMapDeviceSensors, mapSensorToDevice,
-    getDeviceSensorMappingsForDevice, getDeviceSensorMappingsForSensors,
-
-    sendSensorReading, sendSensorReadingsForDevice,
+    getSensors,
+    updateSensor,
+    registerAndMapDeviceSensors,
+    getDeviceSensorMappingsForDevice,
+    sendSensorReading,
+    sendSensorReadingsForDevice,
 }

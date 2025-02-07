@@ -1,4 +1,4 @@
-require("dotenv").config();
+require("dotenv").config()
 
 module.exports = {
     API_BASE_URL: process.env.API_BASE_URL || "http://localhost:4000/acme",
@@ -45,6 +45,7 @@ module.exports = {
         "Proximity": "cm",
         "Radar": "m",
         "Rear Collision Radar": "m",
+        "Forward Collision Radar": "m",
         "RFID": "tag_id",
         "SpO2": "%",
         "Speed": "km/h",

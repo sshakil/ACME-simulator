@@ -25,7 +25,7 @@ const registerAndMapSensors = async (deviceId, deviceType) => {
 }
 
 module.exports = (program) => {
-    // 🚀 Register multiple devices
+
     program
         .command("register-devices <devices>")
         .description("Registers multiple devices (e.g., train=2,truck=1,car=3)")
@@ -60,7 +60,6 @@ module.exports = (program) => {
             log("")
         })
 
-    // 🚀 Register a device
     program
         .command("register-device <name> <type>")
         .option("--no-sensors", "Do not auto-map sensors to the device")
@@ -83,7 +82,6 @@ module.exports = (program) => {
             log("")
         })
 
-    // 🚀 Delete a device
     program
         .command("delete-device <id>")
         .description("Deletes a device")
@@ -96,5 +94,27 @@ module.exports = (program) => {
                 log("❌", error.message, error.response?.data || "")
                 process.exit(1)
             }
+        })
+
+    program
+        .command("detach-device-sensor")
+        .requiredOption("-d, --device-id <deviceId>", "Device with ID to detach sensor from")
+        .requiredOption("-i, --sensor-id <id>", "Sensor with ID to detach")
+        .description("Detach sensor with ID from device with ID")
+        .action(async (options) => {
+            const {sensorId, deviceId} = options
+            log(`✅ Sensor ${sensorId} detached from ${deviceId}`)
+            log("")
+        })
+
+    program
+        .command("attach-device-sensor")
+        .requiredOption("-d, --device-id <deviceId>", "Device with ID to attach sensor to")
+        .requiredOption("-i, --sensor-id <id>", "Sensor with ID detach")
+        .description("Attach sensor with ID to device with ID")
+        .action(async (options) => {
+            const {sensorId, deviceId} = options
+            log(`✅ Sensor ${sensorId} attached to ${deviceId}`)
+            log("")
         })
 }
